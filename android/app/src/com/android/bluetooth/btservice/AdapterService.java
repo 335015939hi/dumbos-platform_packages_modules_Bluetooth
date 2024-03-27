@@ -134,8 +134,8 @@ import com.android.bluetooth.hfpclient.HeadsetClientService;
 import com.android.bluetooth.hid.HidDeviceService;
 import com.android.bluetooth.hid.HidHostService;
 import com.android.bluetooth.le_audio.LeAudioService;
-import com.android.bluetooth.le_scan.ScanManager;
 import com.android.bluetooth.le_scan.ScanController;
+import com.android.bluetooth.le_scan.ScanManager;
 import com.android.bluetooth.map.BluetoothMapService;
 import com.android.bluetooth.mapclient.MapClientService;
 import com.android.bluetooth.mcp.McpService;
@@ -942,6 +942,7 @@ public class AdapterService extends Service {
         int metricId = getMetricId(device);
         long currentTime = System.nanoTime();
         long endToEndLatencyNanos = currentTime - socketCreationTimeNanos;
+        byte[] remoteDeviceInfoBytes = MetricsLogger.getInstance().getRemoteDeviceInfoProto(device);
         BluetoothStatsLog.write(
                 BluetoothStatsLog.BLUETOOTH_RFCOMM_CONNECTION_ATTEMPTED,
                 metricId,
@@ -952,7 +953,7 @@ public class AdapterService extends Service {
                 resultCode,
                 isSerialPort,
                 appUid,
-                new byte[0]);
+                remoteDeviceInfoBytes);
     }
 
     @RequiresPermission(
@@ -3382,10 +3383,7 @@ public class AdapterService extends Service {
                 return BluetoothDevice.DEVICE_TYPE_UNKNOWN;
             }
 
-            DeviceProperties deviceProp = service.mRemoteDevices.getDeviceProperties(device);
-            return deviceProp != null
-                    ? deviceProp.getDeviceType()
-                    : BluetoothDevice.DEVICE_TYPE_UNKNOWN;
+            return service.getRemoteType(device);
         }
 
         @Override
@@ -8108,6 +8106,19 @@ public class AdapterService extends Service {
         }
 
         return true;
+    }
+
+    /**
+     * Get type of the remote device
+     *
+     * @param device the device to check
+     * @return int device type
+     */
+    public int getRemoteType(BluetoothDevice device) {
+        DeviceProperties deviceProp = mRemoteDevices.getDeviceProperties(device);
+        return deviceProp != null
+                ? deviceProp.getDeviceType()
+                : BluetoothDevice.DEVICE_TYPE_UNKNOWN;
     }
 
     /**
