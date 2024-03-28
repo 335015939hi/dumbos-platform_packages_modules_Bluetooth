@@ -50,6 +50,7 @@ import com.android.bluetooth.flags.Flags;
 
 import com.google.common.primitives.Ints;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -655,12 +656,11 @@ public class HidHostService extends ProfileService {
                     Log.e(
                             TAG,
                             "handleMessageConnectStateChanged: "
-                                    + "remove unknown device: "
+                                    + "disconnect and disable the unknown device: "
                                     + device
                                     + " state: "
                                     + state);
-                    mNativeInterface.virtualUnPlug(
-                            getByteAddress(device), getAddressType(device), getTransport(device));
+                    nativeDisconnect(device, transport, false);
                     return;
                 }
             }
@@ -880,7 +880,7 @@ public class HidHostService extends ProfileService {
                 int[] states, AttributionSource source) {
             HidHostService service = getService(source);
             if (service == null) {
-                return Collections.emptyList();
+                return new ArrayList<BluetoothDevice>(0);
             }
             return service.getDevicesMatchingConnectionStates(states);
         }
