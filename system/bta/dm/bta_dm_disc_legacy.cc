@@ -322,13 +322,11 @@ static void bta_dm_search_cancel() {
      active */
   else if (!bta_dm_search_cb.name_discover_done) {
     get_btm_client_interface().peer.BTM_CancelRemoteDeviceName();
-#ifndef TARGET_FLOSS
     /* bta_dm_search_cmpl is called when receiving the remote name cancel evt */
     if (!com::android::bluetooth::flags::
             bta_dm_defer_device_discovery_state_change_until_rnr_complete()) {
       bta_dm_search_cmpl();
     }
-#endif
   } else {
     bta_dm_inq_cmpl();
   }
@@ -1103,6 +1101,9 @@ static void bta_dm_find_services(const RawAddress& bd_addr) {
       if (!get_legacy_stack_sdp_api()
                ->service.SDP_ServiceSearchAttributeRequest(
                    bd_addr, bta_dm_search_cb.p_sdp_db, &bta_dm_sdp_callback)) {
+        log::warn(
+            "Unable to start SDP service search attribute request peer:{}",
+            bd_addr);
         /*
          * If discovery is not successful with this device, then
          * proceed with the next one.
