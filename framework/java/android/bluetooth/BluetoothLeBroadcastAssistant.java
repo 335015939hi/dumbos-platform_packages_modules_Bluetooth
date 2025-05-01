@@ -30,6 +30,7 @@ import android.annotation.RequiresNoPermission;
 import android.annotation.RequiresPermission;
 import android.annotation.SdkConstant;
 import android.annotation.SystemApi;
+import android.app.compat.gms.GmsCompat;
 import android.bluetooth.annotations.RequiresBluetoothConnectPermission;
 import android.bluetooth.annotations.RequiresBluetoothLocationPermission;
 import android.bluetooth.annotations.RequiresBluetoothScanPermission;
@@ -756,6 +757,8 @@ public final class BluetoothLeBroadcastAssistant implements BluetoothProfile, Au
                     if (service != null) {
                         service.registerCallback(mCallback, mAttributionSource);
                     }
+                } catch (SecurityException se) {
+                    GmsCompat.catchOrRethrow(se);
                 } catch (RemoteException e) {
                     Log.e(TAG, e.toString() + "\n" + Log.getStackTraceString(new Throwable()));
                 }
@@ -801,6 +804,8 @@ public final class BluetoothLeBroadcastAssistant implements BluetoothProfile, Au
                     if (service != null) {
                         service.unregisterCallback(mCallback, mAttributionSource);
                     }
+                } catch (SecurityException se) {
+                    GmsCompat.catchOrRethrow(se);
                 } catch (RemoteException e) {
                     Log.e(TAG, e.toString() + "\n" + Log.getStackTraceString(new Throwable()));
                 }

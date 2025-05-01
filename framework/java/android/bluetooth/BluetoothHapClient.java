@@ -33,6 +33,7 @@ import android.annotation.RequiresPermission;
 import android.annotation.SdkConstant;
 import android.annotation.SuppressLint;
 import android.annotation.SystemApi;
+import android.app.compat.gms.GmsCompat;
 import android.bluetooth.annotations.RequiresBluetoothConnectPermission;
 import android.content.AttributionSource;
 import android.content.Context;
@@ -537,7 +538,11 @@ public final class BluetoothHapClient implements BluetoothProfile, AutoCloseable
     @SuppressLint("AndroidFrameworkRequiresPermission") // Consumer are fakely reporting permission
     public void registerCallback(
             @NonNull @CallbackExecutor Executor executor, @NonNull Callback callback) {
-        mCallbackWrapper.registerCallback(mService, callback, executor);
+        try {
+            mCallbackWrapper.registerCallback(mService, callback, executor);
+        } catch (SecurityException se) {
+            GmsCompat.catchOrRethrow(se);
+        }
     }
 
     /**
@@ -558,7 +563,11 @@ public final class BluetoothHapClient implements BluetoothProfile, AutoCloseable
     @RequiresPermission(allOf = {BLUETOOTH_CONNECT, BLUETOOTH_PRIVILEGED})
     @SuppressLint("AndroidFrameworkRequiresPermission") // Consumer are fakely reporting permission
     public void unregisterCallback(@NonNull Callback callback) {
-        mCallbackWrapper.unregisterCallback(mService, callback);
+        try {
+            mCallbackWrapper.unregisterCallback(mService, callback);
+        } catch (SecurityException se) {
+            GmsCompat.catchOrRethrow(se);
+        }
     }
 
     /**

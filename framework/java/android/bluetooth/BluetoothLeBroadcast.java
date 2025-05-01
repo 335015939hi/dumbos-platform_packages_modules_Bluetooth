@@ -27,6 +27,7 @@ import android.annotation.RequiresNoPermission;
 import android.annotation.RequiresPermission;
 import android.annotation.SuppressLint;
 import android.annotation.SystemApi;
+import android.app.compat.gms.GmsCompat;
 import android.bluetooth.annotations.RequiresBluetoothConnectPermission;
 import android.content.AttributionSource;
 import android.content.Context;
@@ -381,6 +382,8 @@ public final class BluetoothLeBroadcast implements AutoCloseable, BluetoothProfi
                     if (service != null) {
                         service.registerLeBroadcastCallback(mCallback, mAttributionSource);
                     }
+                } catch (SecurityException se) {
+                    GmsCompat.catchOrRethrow(se);
                 } catch (RemoteException e) {
                     Log.e(TAG, e.toString() + "\n" + Log.getStackTraceString(new Throwable()));
                 }
@@ -428,6 +431,8 @@ public final class BluetoothLeBroadcast implements AutoCloseable, BluetoothProfi
                 if (service != null) {
                     service.unregisterLeBroadcastCallback(mCallback, mAttributionSource);
                 }
+            } catch (SecurityException se) {
+                GmsCompat.catchOrRethrow(se);
             } catch (RemoteException | IllegalStateException e) {
                 Log.e(TAG, e.toString() + "\n" + Log.getStackTraceString(new Throwable()));
             }

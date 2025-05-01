@@ -35,6 +35,7 @@ import android.annotation.SdkConstant.SdkConstantType;
 import android.annotation.SuppressLint;
 import android.annotation.SystemApi;
 import android.app.compat.CompatChanges;
+import android.app.compat.gms.GmsCompat;
 import android.bluetooth.annotations.RequiresBluetoothConnectPermission;
 import android.bluetooth.annotations.RequiresLegacyBluetoothPermission;
 import android.compat.annotation.ChangeId;
@@ -1005,7 +1006,11 @@ public final class BluetoothLeAudio implements BluetoothProfile, AutoCloseable {
         mContext.enforcePermission(BLUETOOTH_CONNECT, pid, uid, null);
         mContext.enforcePermission(BLUETOOTH_PRIVILEGED, pid, uid, null);
 
-        mCallbackWrapper.registerCallback(getService(), callback, executor);
+        try {
+            mCallbackWrapper.registerCallback(getService(), callback, executor);
+        } catch (SecurityException se) {
+            GmsCompat.catchOrRethrow(se);
+        }
     }
 
     /**
@@ -1033,7 +1038,11 @@ public final class BluetoothLeAudio implements BluetoothProfile, AutoCloseable {
         mContext.enforcePermission(BLUETOOTH_CONNECT, pid, uid, null);
         mContext.enforcePermission(BLUETOOTH_PRIVILEGED, pid, uid, null);
 
-        mCallbackWrapper.unregisterCallback(getService(), callback);
+        try {
+            mCallbackWrapper.unregisterCallback(getService(), callback);
+        } catch (SecurityException se) {
+            GmsCompat.catchOrRethrow(se);
+        }
     }
 
     /**
