@@ -1473,7 +1473,7 @@ public final class BluetoothAdapter {
                     GET_SYSTEM_STATE_API,
                     sBluetoothGetSystemStateQuery);
 
-    private @InternalAdapterState int getStateInternal() {
+    private static @InternalAdapterState int getStateInternal() {
         if (GmsCompat.isEnabled()) {
             if (!GmsCompat.hasPermission(android.Manifest.permission.BLUETOOTH_SCAN)) {
                 // called by both getState() and getLeState()
