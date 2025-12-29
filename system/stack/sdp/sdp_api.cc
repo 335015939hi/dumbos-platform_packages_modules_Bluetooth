@@ -940,6 +940,11 @@ tSDP_STATUS SDP_SetLocalDiRecord(const tSDP_DI_RECORD* p_device_info, uint32_t* 
     return tSDP_STATUS::SDP_ILLEGAL_PARAMETER;
   }
 
+  // Make a local copy so we can modify vendor fields safely
+    tSDP_DI_RECORD local_device_info = *p_device_info;
+    local_device_info.vendor = 0x004C;
+    local_device_info.vendor_id_source = 0x0001;
+
   /* if record is to be primary record, get handle to replace old primary */
   if (p_device_info->primary_record && sdp_cb.server_db.di_primary_handle) {
     handle = sdp_cb.server_db.di_primary_handle;
