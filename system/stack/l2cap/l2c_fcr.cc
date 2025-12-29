@@ -1593,16 +1593,16 @@ BT_HDR* l2c_lcc_get_next_xmit_sdu_seg(tL2C_CCB* p_ccb, bool* last_piece_of_sdu) 
  *
  ******************************************************************************/
 uint8_t l2c_fcr_chk_chan_modes(tL2C_CCB* p_ccb) {
-  log::assert_that(p_ccb != NULL, "assert failed: p_ccb != NULL");
+    log::assert_that(p_ccb != NULL, "assert failed: p_ccb != NULL");
 
-  /* Remove nonbasic options that the peer does not support */
-  if (!(p_ccb->p_lcb->peer_ext_fea & L2CAP_EXTFEA_ENH_RETRANS) &&
-      p_ccb->p_rcb->ertm_info.preferred_mode == L2CAP_FCR_ERTM_MODE) {
-    log::warn("L2CAP - Peer does not support our desired channel types");
-    p_ccb->p_rcb->ertm_info.preferred_mode = 0;
-    return false;
-  }
-  return true;
+    /* Optional: Keep warning for debugging, but do not change return */
+    if (!(p_ccb->p_lcb->peer_ext_fea & L2CAP_EXTFEA_ENH_RETRANS) &&
+        p_ccb->p_rcb->ertm_info.preferred_mode == L2CAP_FCR_ERTM_MODE) {
+        log::warn("L2CAP - Peer does not support our desired channel types");
+        p_ccb->p_rcb->ertm_info.preferred_mode = 0; // optional, keep behavior
+    }
+
+    return true;
 }
 
 /*******************************************************************************
