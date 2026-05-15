@@ -26,6 +26,7 @@ import android.content.AttributionSource;
 import android.os.Binder;
 import android.os.ParcelFileDescriptor;
 import android.os.ParcelUuid;
+import android.os.SystemProperties;
 import android.util.Log;
 
 import com.android.bluetooth.Utils;
@@ -36,6 +37,13 @@ class BluetoothSocketManagerBinder extends IBluetoothSocketManager.Stub {
     private static final int INVALID_FD = -1;
 
     private static final int INVALID_CID = -1;
+
+    private static final String BLE_ONLY_PROPERTY = "persist.bluetooth.ble_only";
+
+    private static boolean isBleOnlyBlockedSocket(int type) {
+        return type != BluetoothSocket.TYPE_LE
+                && SystemProperties.getBoolean(BLE_ONLY_PROPERTY, false);
+    }
 
     private AdapterService mService;
 
@@ -59,6 +67,16 @@ class BluetoothSocketManagerBinder extends IBluetoothSocketManager.Stub {
         enforceActiveUser();
 
         if (!Utils.checkConnectPermissionForPreflight(mService, source)) {
+            return null;
+        }
+
+        if (isBleOnlyBlockedSocket(type)) {
+            Log.w(
+                    TAG,
+                    "connectSocket: BLE-only mode, rejecting Classic socket type="
+                            + type
+                            + " from "
+                            + Utils.getUidPidString());
             return null;
         }
 
@@ -116,6 +134,16 @@ class BluetoothSocketManagerBinder extends IBluetoothSocketManager.Stub {
             return null;
         }
 
+        if (isBleOnlyBlockedSocket(type)) {
+            Log.w(
+                    TAG,
+                    "connectSocketWithOffload: BLE-only mode, rejecting Classic socket type="
+                            + type
+                            + " from "
+                            + Utils.getUidPidString());
+            return null;
+        }
+
         if (dataPath != BluetoothSocketSettings.DATA_PATH_NO_OFFLOAD) {
             mService.enforceCallingOrSelfPermission(BLUETOOTH_PRIVILEGED, null);
             enforceSocketOffloadSupport(type);
@@ -170,6 +198,16 @@ class BluetoothSocketManagerBinder extends IBluetoothSocketManager.Stub {
             return null;
         }
 
+        if (isBleOnlyBlockedSocket(type)) {
+            Log.w(
+                    TAG,
+                    "createSocketChannel: BLE-only mode, rejecting Classic socket type="
+                            + type
+                            + " from "
+                            + Utils.getUidPidString());
+            return null;
+        }
+
         Log.i(
                 TAG,
                 "createSocketChannel: type="
@@ -216,6 +254,16 @@ class BluetoothSocketManagerBinder extends IBluetoothSocketManager.Stub {
         enforceActiveUser();
 
         if (!Utils.checkConnectPermissionForPreflight(mService, source)) {
+            return null;
+        }
+
+        if (isBleOnlyBlockedSocket(type)) {
+            Log.w(
+                    TAG,
+                    "createSocketChannelWithOffload: BLE-only mode, rejecting Classic socket type="
+                            + type
+                            + " from "
+                            + Utils.getUidPidString());
             return null;
         }
 

@@ -40,6 +40,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.ParcelUuid;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.sysprop.BluetoothProperties;
 import android.util.Log;
@@ -122,6 +123,14 @@ public class HidHostService extends ConnectableProfile {
     private static final int MESSAGE_SEND_DATA = 18;
 
     public static final int STATE_ACCEPTING = STATE_DISCONNECTING + 1;
+
+    // GrapheneOS: when this system property is true, only Bluetooth LE works. The HID host
+    // service stays enabled so LE HID (HOGP) over GATT keeps working, but BR/EDR HID is blocked.
+    private static final String BLE_ONLY_PROPERTY = "persist.bluetooth.ble_only";
+
+    private static boolean isBleOnly() {
+        return SystemProperties.getBoolean(BLE_ONLY_PROPERTY, false);
+    }
 
     public HidHostService(AdapterService adapterService) {
         this(adapterService, null);
@@ -518,6 +527,19 @@ public class HidHostService extends ConnectableProfile {
         int state = msg.arg2;
         int prevState = getState(device, transport);
 
+        // GrapheneOS: in BLE-only mode, tear down any BR/EDR HID link. LE HID (HOGP, reported
+        // with TRANSPORT_LE) is unaffected and keeps working.
+        if (transport == TRANSPORT_BREDR && state != STATE_DISCONNECTED && isBleOnly()) {
+            Log.i(
+                    TAG,
+                    "handleMessageConnectStateChanged: BLE-only mode, blocking BR/EDR HID"
+                            + (" device=" + device)
+                            + (" state=" + state));
+            nativeDisconnect(device, TRANSPORT_BREDR, false);
+            updateConnectionState(device, TRANSPORT_BREDR, STATE_DISCONNECTED);
+            return;
+        }
+
         InputDevice inputDevice = mInputDevices.get(device);
         if (inputDevice != null) {
             // Update transport if it was not resolved already
@@ -596,6 +618,13 @@ public class HidHostService extends ConnectableProfile {
                             + (" device=" + device)
                             + (" connectionPolicy=" + connectionPolicy));
 
+            return;
+        }
+        // GrapheneOS: in BLE-only mode, don't initiate a BR/EDR HID connection. AUTO/LE are
+        // left alone so LE HID (HOGP) still connects; any BR/EDR link that the native stack
+        // resolves from AUTO is torn down in handleMessageConnectStateChanged.
+        if (inputDevice.mSelectedTransport == TRANSPORT_BREDR && isBleOnly()) {
+            Log.i(TAG, "handleMessageConnect: BLE-only mode, skipping BR/EDR HID device=" + device);
             return;
         }
         nativeConnect(device, inputDevice.mSelectedTransport);
