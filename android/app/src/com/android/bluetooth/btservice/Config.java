@@ -78,6 +78,34 @@ public class Config {
         }
     }
 
+    /**
+     * Profiles that operate purely over Bluetooth Classic (BR/EDR). These are disabled when the
+     * user enables the "BLE only" mode.
+     *
+     * <p>Note: HID_HOST is intentionally absent. HidHostService also serves LE HID (HOGP) over
+     * GATT, which must keep working in BLE-only mode, so the whole profile cannot be disabled.
+     * Its BR/EDR transport is instead blocked inside HidHostService when BLE-only is active.
+     * HID_DEVICE (the device/peripheral role) is BR/EDR-only and stays in this list.
+     */
+    private static final String BLE_ONLY_PROPERTY = "persist.bluetooth.ble_only";
+
+    private static final int[] CLASSIC_PROFILES = {
+        BluetoothProfile.A2DP,
+        BluetoothProfile.A2DP_SINK,
+        BluetoothProfile.AVRCP,
+        BluetoothProfile.AVRCP_CONTROLLER,
+        BluetoothProfile.HEADSET,
+        BluetoothProfile.HEADSET_CLIENT,
+        BluetoothProfile.HID_DEVICE,
+        BluetoothProfile.MAP,
+        BluetoothProfile.MAP_CLIENT,
+        BluetoothProfile.OPP,
+        BluetoothProfile.PAN,
+        BluetoothProfile.PBAP,
+        BluetoothProfile.PBAP_CLIENT,
+        BluetoothProfile.SAP,
+    };
+
     /** List of profile services related to LE audio */
     private static final int[] LE_AUDIO_UNICAST_PROFILES = {
         BluetoothProfile.LE_AUDIO,
@@ -210,6 +238,16 @@ public class Config {
         // accidentally
         if (!Utils.isBleSupported(ctx)) {
             setProfileEnabled(BluetoothProfile.HEARING_AID, false);
+        }
+
+        // GrapheneOS: when "BLE only" is enabled, disable all Classic (BR/EDR) profiles.
+        // The toggle's preference controller restarts the adapter on change so this
+        // init() runs again and re-reads the new value.
+        if (SystemProperties.getBoolean(BLE_ONLY_PROPERTY, false)) {
+            Log.i(TAG, "BLE-only mode enabled: disabling Classic profiles");
+            for (int p : CLASSIC_PROFILES) {
+                setProfileEnabled(p, false);
+            }
         }
 
         for (ProfileConfig config : PROFILE_SERVICES_AND_FLAGS) {
